@@ -40,43 +40,14 @@ def fourier_perlin_noise(image, dtd_image, aug_prob=1.0):
     perlin_noise = np.expand_dims(perlin_noise, axis=2) # [256, 256, 1]
     threshold = 0.5
     perlin_thr = np.where(perlin_noise > threshold, np.ones_like(perlin_noise), np.zeros_like(perlin_noise)) # convert matrix to [0, 1] by threshold
-
     img_copy = image.copy().transpose((2, 0, 1))
     dtd_copy = dtd_image.copy().transpose((2, 0, 1))
     FDA_img = FDA_source_to_target(img_copy, dtd_copy).transpose((1, 2, 0))
     FDA_img = FDA_img / 255.0
     beta = torch.rand(1).numpy()[0] * 0.8
-    # img_thr = dtd_image * perlin_thr / 255.0
-    # image_aug = (FDA_img * (1 - perlin_thr) + (1 - beta) * img_thr + beta * FDA_img * perlin_thr)
     image_aug = (1 - perlin_thr) * FDA_img + (1 - beta) * FDA_img + (beta * perlin_thr) * FDA_img # (beta + perlin_thr) * FDA_img
     image_aug = image_aug.astype(np.float32)
     return image_aug
-
-    # dtd_thr = dtd_image * perlin_thr / 255.0
-    # img_thr = image * perlin_thr / 255.0
-    # dtd_thr_copy = np.array(dtd_thr * 255.0).transpose((2, 0, 1)).copy()
-    # img_thr_copy = np.array(img_thr * 255.0).transpose((2, 0, 1)).copy()
-    # FDA_img = FDA_source_to_target(img_thr_copy, dtd_thr_copy)
-    # FDA_img = FDA_img.transpose((1, 2, 0))
-    # beta = torch.rand(1).numpy()[0] * 0.8
-    # image = image / 255.0
-    # FDA_img = FDA_img / 255.0
-    # image_aug = image + (1 - beta) * FDA_img
-    # image_aug = image_aug.astype(np.float32)
-    # return image_aug
-
-    # img_thr = dtd_image * perlin_thr / 255.0
-    # image = image / 255.0
-    # beta = torch.rand(1).numpy()[0] * 0.8
-    # image_aug = (image * (1 - perlin_thr) + (1 - beta) * img_thr + beta * image * perlin_thr)
-    # image_aug = image_aug.astype(np.float32)
-    # no_anomaly = torch.rand(1).numpy()[0]
-    # if no_anomaly > aug_prob:
-    #     return image, np.zeros_like(perlin_thr)
-    # else:
-    #     msk = perlin_thr.astype(np.float32)
-    #     msk = msk.transpose(2, 0, 1)
-    #     return image_aug, msk
 
 if __name__ == '__main__':
     image = Image.open('000.png').convert('RGB').resize((256, 256), Image.BILINEAR)

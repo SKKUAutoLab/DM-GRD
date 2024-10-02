@@ -77,8 +77,7 @@ class MemoryBank:
         for l, level in enumerate(mem_info.keys()):
             selected_features = torch.index_select(mem_info[level], dim=0, index=diff_bank.argmin(dim=1)) # [8, 64, 64, 64], [8, 128, 32, 32], [8, 256, 16, 16]
             diff_features = F.mse_loss(selected_features, features[l], reduction='none')
-            features[l] = torch.cat([features[l], diff_features], dim=1) # features[l] = torch.cat([features[l], diff_bank[l]], dim=1)
-        # return features # [8, 128, 64, 64], [8, 256, 32, 32], [8, 512, 16, 16]
+            features[l] = torch.cat([features[l], diff_features], dim=1)
         if self.is_normal:
             return self.update_normal_memory_information, diff_bank, features
         else:

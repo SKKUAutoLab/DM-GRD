@@ -20,7 +20,7 @@ def setup_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
     torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.benchmark = True
 
 def cal_anomaly_map(fs_list, ft_list, out_size=224, amap_mode='mul'):
     if amap_mode == 'mul':
@@ -78,6 +78,7 @@ def evaluate(teacher, bn, student, msff, memory_bank_normal, dataloader, args):
     return auroc_image, auroc_pixel, aupro
 
 def inference(_class_, args):
+    setup_seed(args.seed)
     if args.type_dataset == 'mvtec':
         train_path = 'datasets/mvtec/' + _class_ + '/train'
         test_path = 'datasets/mvtec/' + _class_
@@ -87,6 +88,9 @@ def inference(_class_, args):
     elif args.type_dataset == 'visa':
         train_path = 'datasets/visa/' + _class_ + '/train'
         test_path = 'datasets/visa/' + _class_
+    else:
+        print('This dataset does not exist')
+        raise NotImplementedError
     data_transform, gt_transform = get_data_transforms(args.image_size)
     # test loader
     testset = MVTecDataset_test(root=test_path, transform=data_transform, gt_transform=gt_transform, type_dataset=args.type_dataset)
@@ -115,17 +119,17 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint_folder', default='saved_mvtec', type=str)
     parser.add_argument('--image_size', default=256, type=int)
     parser.add_argument('--nb_memory_sample', default=30, type=int)
-    parser.add_argument('--texture_source_dir', default='dtd/images', type=str)
+    parser.add_argument('--texture_source_dir', default='datasets/dtd/images', type=str)
+    parser.add_argument('--seed', type=int, default=111)
     args = parser.parse_args()
 
-    setup_seed(111)
     print('Evaluating dataset:', args.type_dataset)
     if args.type_dataset == 'mvtec':
-        all_classes = ['carpet', 'leather', 'grid', 'tile', 'wood', 'bottle', 'hazelnut', 'cable', 'capsule', 'pill', 'transistor', 'metal_nut', 'screw', 'toothbrush', 'zipper']  # 15 objects
+        all_classes = ['carpet', 'leather', 'grid', 'tile', 'wood', 'bottle', 'hazelnut', 'cable', 'capsule', 'pill', 'transistor', 'metal_nut', 'screw', 'toothbrush', 'zipper'] # 15 objects
     elif args.type_dataset == 'btad':
         all_classes = ['01', '02', '03'] # 3 objects
     elif args.type_dataset == 'visa':
-        all_classes = ['candle', 'capsules', 'cashew', 'chewinggum', 'fryum', 'macaroni1', 'macaroni2', 'pcb1', 'pcb2', 'pcb3', 'pcb4', 'pipe_fryum']  # 12 objects
+        all_classes = ['candle', 'capsules', 'cashew', 'chewinggum', 'fryum', 'macaroni1', 'macaroni2', 'pcb1', 'pcb2', 'pcb3', 'pcb4', 'pipe_fryum'] # 12 objects
     else:
         print('This dataset does not exist')
         raise NotImplementedError

@@ -1,8 +1,6 @@
 import numpy as np
 from PIL import Image
 import cv2
-import warnings
-warnings.filterwarnings('ignore')
 
 def low_freq_mutate_np(amp_src, amp_dest, L=0.1):
     lam = np.random.uniform(0.0, 1.0)
@@ -21,12 +19,6 @@ def low_freq_mutate_np(amp_src, amp_dest, L=0.1):
     a_src_ = np.copy(a_src)
     a_dest_ = np.copy(a_dest)
     a_src[:, h1:h2, w1:w2] = lam * a_dest_[:, h1:h2, w1:w2] + (1 - lam) * a_src_[:, h1:h2, w1:w2]
-
-    # a_src[:, 0:b, 0:b] = lam * a_dest_[:, 0:b, 0:b] + (1 - lam) * a_src_[:, 0:b, 0:b] # top left
-    # a_src[:, 0:b, w - b:w] = lam * a_dest_[:, 0:b, w - b:w] + (1 - lam) * a_src_[:, 0:b, w - b:w] # top right
-    # a_src[:, h - b:h, 0:b] = lam * a_dest_[:, h - b:h, 0:b] + (1 - lam) * a_src_[:, h - b:h, 0:b] # bottom left
-    # a_src[:, h - b:h, w - b:w] = lam * a_dest_[:, h - b:h, w - b:w] + (1 - lam) * a_src_[:, h - b:h, w - b:w]  # bottom right
-
     a_src = np.fft.ifftshift(a_src, axes=(-2, -1))
     return a_src
 
@@ -56,6 +48,3 @@ if __name__ == '__main__':
     out = FDA_source_to_target(src_img, target_img, 0.1)
     out = out.transpose((1, 2, 0))
     cv2.imwrite('aug.jpg', out)
-    # img_gray = cv2.cvtColor(out, cv2.COLOR_BGR2RGB)
-    # img_gray = cv2.resize(img_gray / 255., (256, 256))
-    # cv2.imwrite('aug.jpg', img_gray)

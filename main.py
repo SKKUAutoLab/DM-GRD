@@ -12,20 +12,19 @@ from resnet import wide_resnet50_2
 from de_resnet import de_wide_resnet50_2
 from msff import MSFF
 
-def setup_seed(random_seed):
-    torch.manual_seed(random_seed)
-    torch.cuda.manual_seed(random_seed)
-    torch.cuda.manual_seed_all(random_seed)
+def setup_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-    np.random.seed(random_seed)
-    random.seed(random_seed)
-    os.environ['PYTHONHASHSEED'] = str(random_seed)
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 def main(args):
+    setup_seed(args.seed)
     print('Training class:', args.target)
     savedir = os.path.join(args.save_dir, args.target)
     if not os.path.exists(savedir):
@@ -41,6 +40,9 @@ def main(args):
     elif args.type_dataset == 'visa':
         train_path = 'datasets/visa/' + args.target + '/train'
         test_path = 'datasets/visa/' + args.target
+    else:
+        print('This datset does not exist')
+        raise NotImplementedError
     trainset = MVTecDataset_train(root=train_path, transform=data_transform, type_dataset=args.type_dataset, dtd_paths=args.texture_source_dir, to_memory_normal=False, to_memory_abnormal=False)
     testset = MVTecDataset_test(root=test_path, transform=data_transform, gt_transform=gt_transform, type_dataset=args.type_dataset)
     memoryset_normal = MVTecDataset_train(root=train_path, transform=data_transform, type_dataset=args.type_dataset, dtd_paths=args.texture_source_dir, to_memory_normal=True, to_memory_abnormal=False)
@@ -60,6 +62,7 @@ def main(args):
     print('Total params:', count_parameters(teacher) + count_parameters(student) + count_parameters(msff) + count_parameters(bn))
     # optimizer
     optimizer = torch.optim.Adam(list(student.parameters()) + list(bn.parameters()) + list(msff.parameters()), lr=args.lr, betas=(0.5, 0.999))
+    # scheduler
     if args.use_scheduler:
         scheduler = CosineAnnealingWarmupRestarts(optimizer, first_cycle_steps=args.num_training_steps, max_lr=args.lr, min_lr=args.min_lr, warmup_steps=int(args.num_training_steps * args.warmup_ratio))
     else:
@@ -73,18 +76,12 @@ if __name__=='__main__':
     # general config
     parser.add_argument('--type_dataset', default='mvtec', type=str, choices=['mvtec', 'btad', 'visa'])
     parser.add_argument('--datadir', default='datasets/mvtec', type=str)
-    parser.add_argument('--texture_source_dir', default='dtd/images', type=str)
+    parser.add_argument('--texture_source_dir', default='datasets/dtd/images', type=str)
     parser.add_argument('--target', default='bottle', type=str)
-    parser.add_argument('--resize', default=(288, 288), type=tuple)
     parser.add_argument('--imagesize', default=256, type=int)
-    parser.add_argument('--structure_grid_size', default=8, type=int)
-    parser.add_argument('--transparency_range', default=(0.15, 1.), type=tuple) # under and upper bound
-    parser.add_argument('--perlin_scale', default=6, type=int)
-    parser.add_argument('--min_perlin_scale', default=0, type=int)
-    parser.add_argument('--perlin_noise_threshold', default=0.5, type=float)
     parser.add_argument('--batch_size', default=8, type=int)
-    parser.add_argument('--num_workers', default=4, type=int)
-    parser.add_argument('--seed', default=45, type=int)
+    parser.add_argument('--num_workers', default=0, type=int) # 4
+    parser.add_argument('--seed', default=111, type=int) # 42
     parser.add_argument('--num_training_steps', default=5000, type=int)
     parser.add_argument('--log_interval', default=1, type=int)
     parser.add_argument('--eval_interval', default=100, type=int)
@@ -96,66 +93,13 @@ if __name__=='__main__':
     parser.add_argument('--focal_weight', default=0.4, type=float)
     parser.add_argument('--focal_alpha', default=None)
     parser.add_argument('--focal_gamma', default=4, type=int)
-    parser.add_argument('--lr', default=0.005, type=float) # default: 0.003
+    parser.add_argument('--lr', default=0.005, type=float) # 0.003
     parser.add_argument('--weight_decay', default=0.0005, type=float)
     parser.add_argument('--min_lr', default=0.0001, type=float)
     parser.add_argument('--warmup_ratio', default=0.1, type=float)
     parser.add_argument('--use_scheduler', default=True, type=bool)
     args = parser.parse_args()
-    if args.type_dataset == 'mvtec':
-        if args.target == 'hazelnut':
-            args.use_mask = True
-            args.bg_threshold = 50
-            args.bg_reverse = True
-        elif args.target in ['leather', 'tile', 'wood', 'grid', 'carpet']:
-            args.use_mask = False
-            args.bg_threshold = 0
-            args.bg_reverse = False
-        elif args.target == 'metal_nut':
-            args.use_mask = True
-            args.bg_threshold = 40
-            args.bg_reverse = True
-        elif args.target == 'cable':
-            args.use_mask = False
-            args.bg_threshold = 150
-            args.bg_reverse = True
-        elif args.target == 'capsule':
-            args.use_mask = True
-            args.bg_threshold = 120
-            args.bg_reverse = False
-        elif args.target == 'transistor':
-            args.use_mask = True
-            args.bg_threshold = 90
-            args.bg_reverse = False
-        elif args.target == 'bottle':
-            args.use_mask = True
-            args.bg_threshold = 250
-            args.bg_reverse = False
-        elif args.target == 'screw':
-            args.use_mask = True
-            args.bg_threshold = 110
-            args.bg_reverse = False
-        elif args.target == 'zipper':
-            args.use_mask = True
-            args.bg_threshold = 100
-            args.bg_reverse = False
-        elif args.target == 'pill':
-            args.use_mask = True
-            args.bg_threshold = 100
-            args.bg_reverse = True
-        elif args.target == 'toothbrush':
-            args.use_mask = True
-            args.bg_threshold = 30
-            args.bg_reverse = True
-    elif args.type_dataset == 'btad' or args.type_dataset == 'visa':
-        args.use_mask = True
-        args.bg_threshold = 250
-        args.bg_reverse = False
-    else:
-        print('This dataset does not exist')
-        raise NotImplementedError
 
-    setup_seed(args.seed)
     print('Training dataset:', args.type_dataset)
     if args.type_dataset == 'mvtec':
         all_classes = ['carpet', 'leather', 'grid', 'tile', 'wood', 'bottle', 'hazelnut', 'cable', 'capsule', 'pill', 'transistor', 'metal_nut', 'screw', 'toothbrush', 'zipper'] # 15 objects
@@ -163,6 +107,9 @@ if __name__=='__main__':
         all_classes = ['01', '02', '03'] # 3 objects
     elif args.type_dataset == 'visa':
         all_classes = ['candle', 'capsules', 'cashew', 'chewinggum', 'fryum', 'macaroni1', 'macaroni2', 'pcb1', 'pcb2', 'pcb3', 'pcb4', 'pipe_fryum'] # 12 objects
+    else:
+        print('This datset does not exist')
+        raise NotImplementedError
     list_img_auc, list_pixel_auc, list_pixel_pro = [], [], []
     for cls in all_classes:
         args.target = cls

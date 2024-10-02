@@ -52,6 +52,9 @@ class MVTecDataset_train(torch.utils.data.Dataset):
                 img_paths = glob.glob(os.path.join(self.img_path, 'good') + "/*.bmp")
         elif self.type_dataset == 'visa':
             img_paths = glob.glob(os.path.join(self.img_path, 'good') + "/*.JPG")
+        else:
+            print('This dataset does not exist')
+            raise NotImplementedError
         additional_img_paths = glob.glob(self.dtd_paths + "/*/*.jpg")
         return img_paths, additional_img_paths
 
@@ -63,25 +66,6 @@ class MVTecDataset_train(torch.utils.data.Dataset):
         img = cv2.imread(img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = cv2.resize(img / 255., (256, 256)) # [256, 256, 3]
-        # img_normal = self.transform(img) # [3, 256, 256]
-        ### perlin noise + fourier mixup
-        # src_img = Image.open(img_path).convert('RGB').resize((256, 256), Image.BILINEAR)
-        # dest_index = torch.randint(0, len(self.additional_img_paths), (1,)).item()
-        # dest_img = Image.open(self.additional_img_paths[dest_index]).convert('RGB').resize((256, 256), Image.BILINEAR)
-        # img_noise = fourier_perlin_noise(src_img, dest_img, 1.0)
-        # img_noise = self.transform(img_noise)
-        # # anomaly switch
-        # if self.to_memory_normal and not self.to_memory_abnormal:
-        #     return img_normal
-        # elif not self.to_memory_normal and self.to_memory_abnormal:
-        #     return img_noise
-        # elif not self.to_memory_normal and not self.to_memory_abnormal:
-        #     if self.anomaly_switch:
-        #         img_normal = img_noise
-        #         self.anomaly_switch = False
-        #     else:
-        #         self.anomaly_switch = True
-        #     return img_normal
         if self.to_memory_normal and not self.to_memory_abnormal: # for normal memory module
             img = self.transform(img)
             return img
@@ -112,7 +96,7 @@ class MVTecDataset_test(torch.utils.data.Dataset):
         self.gt_path = os.path.join(root, 'ground_truth')
         self.transform = transform
         self.gt_transform = gt_transform
-        self.img_paths, self.gt_paths, self.labels = self.load_dataset()  # good: 0, anomaly: 1
+        self.img_paths, self.gt_paths, self.labels = self.load_dataset() # good: 0, anomaly: 1
 
     def load_dataset(self):
         img_tot_paths = []
@@ -131,6 +115,9 @@ class MVTecDataset_test(torch.utils.data.Dataset):
                         img_paths = glob.glob(os.path.join(self.img_path, defect_type) + "/*.bmp")
                 elif self.type_dataset == 'visa':
                     img_paths = glob.glob(os.path.join(self.img_path, defect_type) + "/*.JPG")
+                else:
+                    print('This dataset does not exist')
+                    raise NotImplementedError
                 img_tot_paths.extend(img_paths)
                 gt_tot_paths.extend([0] * len(img_paths))
                 tot_labels.extend([0] * len(img_paths))
@@ -152,6 +139,9 @@ class MVTecDataset_test(torch.utils.data.Dataset):
                 elif self.type_dataset == 'visa':
                     img_paths = glob.glob(os.path.join(self.img_path, defect_type) + "/*.JPG")
                     gt_paths = glob.glob(os.path.join(self.gt_path, defect_type) + "/*.png")
+                else:
+                    print('This dataset does not exist')
+                    raise NotImplementedError
                 img_paths.sort()
                 gt_paths.sort()
                 img_tot_paths.extend(img_paths)
