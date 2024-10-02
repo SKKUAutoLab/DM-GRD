@@ -77,7 +77,6 @@ if __name__=='__main__':
     parser.add_argument('--type_dataset', default='mvtec', type=str, choices=['mvtec', 'btad', 'visa'])
     parser.add_argument('--datadir', default='datasets/mvtec', type=str)
     parser.add_argument('--texture_source_dir', default='datasets/dtd/images', type=str)
-    parser.add_argument('--target', default='bottle', type=str)
     parser.add_argument('--imagesize', default=256, type=int)
     parser.add_argument('--batch_size', default=8, type=int)
     parser.add_argument('--num_workers', default=0, type=int) # 4
@@ -88,7 +87,6 @@ if __name__=='__main__':
     parser.add_argument('--save_dir', default='saved_mvtec', type=str)
     # model config
     parser.add_argument('--nb_memory_sample', default=30, type=int)
-    parser.add_argument('--feature_extractor_name', default='resnet18', type=str)
     parser.add_argument('--l1_weight', default=0.6, type=float)
     parser.add_argument('--focal_weight', default=0.4, type=float)
     parser.add_argument('--focal_alpha', default=None)
