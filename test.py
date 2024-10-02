@@ -3,7 +3,6 @@ from models.resnet import wide_resnet50_2
 from models.de_resnet import de_wide_resnet50_2
 from data.dataset import MVTecDataset_train, MVTecDataset_test, get_data_transforms
 import numpy as np
-import random
 from argparse import ArgumentParser
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
@@ -13,14 +12,9 @@ from metrics.pro_curve_util import compute_pro
 from metrics.generic_util import trapezoid
 from models.msff import MSFF
 from models.memory_module import MemoryBank
-
-def setup_seed(seed):
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = True
+from utils import setup_seed
+import warnings
+warnings.filterwarnings("ignore")
 
 def cal_anomaly_map(fs_list, ft_list, out_size=224, amap_mode='mul'):
     if amap_mode == 'mul':
@@ -49,7 +43,6 @@ def evaluate(teacher, bn, student, msff, memory_bank_normal, dataloader, args):
     bn.eval()
     student.eval()
     msff.eval()
-    count = 0
     with torch.no_grad():
         for idx, (img, masks, targets) in enumerate(dataloader): # [8, 3, 256, 256], [8, 256, 256], [8]
             img, masks, targets = img.cuda(), masks.cuda(), targets.cuda()
@@ -65,7 +58,6 @@ def evaluate(teacher, bn, student, msff, memory_bank_normal, dataloader, args):
             image_masks.extend(masks.cpu().numpy())
             anomaly_score.extend(anomaly_score_i.cpu().tolist())
             anomaly_map.extend(scores.cpu().numpy())
-            count += 1
     image_masks = np.array(image_masks) # [83, 256, 256]
     anomaly_map = np.array(anomaly_map) # [83, 256, 256]
     auroc_image = roc_auc_score(image_targets, anomaly_score) # image-level auc
@@ -76,7 +68,7 @@ def evaluate(teacher, bn, student, msff, memory_bank_normal, dataloader, args):
     return auroc_image, auroc_pixel, aupro
 
 def inference(_class_, args):
-    setup_seed(args.seed)
+    setup_seed(args.seed, is_train=False)
     if args.type_dataset == 'mvtec':
         train_path = 'datasets/mvtec/' + _class_ + '/train'
         test_path = 'datasets/mvtec/' + _class_

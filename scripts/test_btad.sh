@@ -1,1 +1,1 @@
-python infer.py --type_dataset btad --checkpoint_folder saved_btad
+python test.py --type_dataset btad --checkpoint_folder saved_btad

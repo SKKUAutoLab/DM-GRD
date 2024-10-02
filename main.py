@@ -1,30 +1,20 @@
 import os
 import torch
 from train import training
-from utils import CosineAnnealingWarmupRestarts
+from utils import CosineAnnealingWarmupRestarts, setup_seed, count_parameters
 from argparse import ArgumentParser
 import numpy as np
-import random
 from torch.utils.data import DataLoader
 from data.dataset import MVTecDataset_train, MVTecDataset_test, get_data_transforms
 from models.memory_module import MemoryBank
 from models.resnet import wide_resnet50_2
 from models.de_resnet import de_wide_resnet50_2
 from models.msff import MSFF
-
-def setup_seed(seed):
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-
-def count_parameters(model):
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+import warnings
+warnings.filterwarnings("ignore")
 
 def main(args):
-    setup_seed(args.seed)
+    setup_seed(args.seed, is_train=True)
     print('Training class:', args.target)
     savedir = os.path.join(args.save_dir, args.target)
     if not os.path.exists(savedir):
