@@ -178,6 +178,6 @@ widgetsnbextension==4.0.9
 yacs==0.1.8
 yapf==0.40.2
 yarl==1.9.4
-zipp==3.17.0
+zipp==3.19.1
 # git+https://github.com/facebookresearch/detectron2.git@v0.6
 git+https://github.com/facebookresearch/fairscale
