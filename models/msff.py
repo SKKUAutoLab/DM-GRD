@@ -1,5 +1,5 @@
 import torch.nn as nn
-from non_local import NONLocalBlock2D
+from .non_local import NONLocalBlock2D
 import torch
 
 class MSFFBlock(nn.Module):

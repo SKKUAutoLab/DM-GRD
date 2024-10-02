@@ -1,16 +1,16 @@
 import os
 import torch
 from train import training
-from scheduler import CosineAnnealingWarmupRestarts
+from utils import CosineAnnealingWarmupRestarts
 from argparse import ArgumentParser
 import numpy as np
 import random
 from torch.utils.data import DataLoader
 from data.dataset import MVTecDataset_train, MVTecDataset_test, get_data_transforms
-from memory_module import MemoryBank
-from resnet import wide_resnet50_2
-from de_resnet import de_wide_resnet50_2
-from msff import MSFF
+from models.memory_module import MemoryBank
+from models.resnet import wide_resnet50_2
+from models.de_resnet import de_wide_resnet50_2
+from models.msff import MSFF
 
 def setup_seed(seed):
     torch.manual_seed(seed)
@@ -59,7 +59,7 @@ def main(args):
     memory_bank_normal.update(teacher=teacher)
     memory_bank_abnormal.update(teacher=teacher)
     msff = MSFF().cuda()
-    print('Total params:', count_parameters(teacher) + count_parameters(student) + count_parameters(msff) + count_parameters(bn))
+    print('Total parameters of the model:', count_parameters(teacher) + count_parameters(student) + count_parameters(msff) + count_parameters(bn))
     # optimizer
     optimizer = torch.optim.Adam(list(student.parameters()) + list(bn.parameters()) + list(msff.parameters()), lr=args.lr, betas=(0.5, 0.999))
     # scheduler
@@ -108,7 +108,7 @@ if __name__=='__main__':
     elif args.type_dataset == 'visa':
         all_classes = ['candle', 'capsules', 'cashew', 'chewinggum', 'fryum', 'macaroni1', 'macaroni2', 'pcb1', 'pcb2', 'pcb3', 'pcb4', 'pipe_fryum'] # 12 objects
     else:
-        print('This datset does not exist')
+        print('This dataset does not exist')
         raise NotImplementedError
     list_img_auc, list_pixel_auc, list_pixel_pro = [], [], []
     for cls in all_classes:
@@ -117,6 +117,4 @@ if __name__=='__main__':
         list_img_auc.append(best_img_auc)
         list_pixel_auc.append(best_pixel_auc)
         list_pixel_pro.append(best_pixel_pro)
-    print('Best Image-level AUC:', round(np.mean(list_img_auc), 4))
-    print('Best Pixel-level AUC:', round(np.mean(list_pixel_auc), 4))
-    print('Best Pixel-level PRO:', round(np.mean(list_pixel_pro), 4))
+    print('Average Image-level AUC: {:.4f}, Average Pixel-level AUC: {:.4f}, Average Pixel-level PRO: {:.4f}'.format(np.mean(list_img_auc), np.mean(list_pixel_auc), np.mean(list_pixel_pro)))

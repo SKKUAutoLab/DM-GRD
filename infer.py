@@ -1,6 +1,6 @@
 import torch
-from resnet import wide_resnet50_2
-from de_resnet import de_wide_resnet50_2
+from models.resnet import wide_resnet50_2
+from models.de_resnet import de_wide_resnet50_2
 from data.dataset import MVTecDataset_train, MVTecDataset_test, get_data_transforms
 import numpy as np
 import random
@@ -11,8 +11,8 @@ from scipy.ndimage import gaussian_filter
 from sklearn.metrics import roc_auc_score
 from metrics.pro_curve_util import compute_pro
 from metrics.generic_util import trapezoid
-from msff import MSFF
-from memory_module import MemoryBank
+from models.msff import MSFF
+from models.memory_module import MemoryBank
 
 def setup_seed(seed):
     torch.manual_seed(seed)
@@ -27,20 +27,18 @@ def cal_anomaly_map(fs_list, ft_list, out_size=224, amap_mode='mul'):
         anomaly_map = np.ones([out_size, out_size]) # [256, 256]
     else:
         anomaly_map = np.zeros([out_size, out_size]) # [256, 256]
-    a_map_list = []
     for i in range(len(ft_list)):
         fs = fs_list[i] # [1, 256, 64, 64]
         ft = ft_list[i] # [1, 256, 64, 64]
         a_map = 1 - F.cosine_similarity(fs, ft) # [1, 64, 64]
         a_map = torch.unsqueeze(a_map, dim=1) # [1, 1, 64, 64]
         a_map = F.interpolate(a_map, size=out_size, mode='bilinear', align_corners=True) # [1, 1, 256, 256]
-        a_map = a_map[0, 0, :, :].to('cpu').detach().numpy() # [256, 256]
-        a_map_list.append(a_map)
+        a_map = a_map[0, 0, :, :].cpu().detach().numpy() # [256, 256]
         if amap_mode == 'mul':
             anomaly_map *= a_map
         else:
             anomaly_map += a_map
-    return anomaly_map, a_map_list
+    return anomaly_map
 
 def evaluate(teacher, bn, student, msff, memory_bank_normal, dataloader, args):
     image_targets = []
@@ -59,7 +57,7 @@ def evaluate(teacher, bn, student, msff, memory_bank_normal, dataloader, args):
             _, _, concat_features_normal = memory_bank_normal.select(features1=inputs)
             msff_outputs_normal = msff(features=concat_features_normal)
             outputs = student(bn(msff_outputs_normal))
-            scores, _ = cal_anomaly_map(inputs, outputs, img.shape[-1], amap_mode='a')
+            scores = cal_anomaly_map(inputs, outputs, img.shape[-1], amap_mode='a')
             scores = gaussian_filter(scores, sigma=4)
             scores = torch.from_numpy(scores).unsqueeze(0).cuda()
             anomaly_score_i = torch.topk(torch.flatten(scores, start_dim=1), 100)[0].mean(dim=1) # [8]
@@ -123,7 +121,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=111)
     args = parser.parse_args()
 
-    print('Evaluating dataset:', args.type_dataset)
+    print('Testing dataset:', args.type_dataset)
     if args.type_dataset == 'mvtec':
         all_classes = ['carpet', 'leather', 'grid', 'tile', 'wood', 'bottle', 'hazelnut', 'cable', 'capsule', 'pill', 'transistor', 'metal_nut', 'screw', 'toothbrush', 'zipper'] # 15 objects
     elif args.type_dataset == 'btad':
@@ -140,6 +138,4 @@ if __name__ == '__main__':
         list_img_auc.append(img_auc)
         list_pixel_auc.append(pixel_auc)
         list_pixel_pro.append(pixel_pro)
-    print('Image-level AUC:', np.round(np.mean(list_img_auc), 4))
-    print('Pixel-level AUC:', np.round(np.mean(list_pixel_auc), 4))
-    print('Pixel-level PRO:', np.round(np.mean(list_pixel_pro), 4))
+    print('Average Image-level AUC: {:.4f}, Average Pixel-level AUC: {:.4f}, Average Pixel-level PRO: {:.4f}'.format(np.mean(list_img_auc), np.mean(list_pixel_auc), np.mean(list_pixel_pro)))

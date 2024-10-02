@@ -1,3 +1,4 @@
+# https://github.com/hq-deng/RD4AD/blob/main/de_resnet.py
 from torch import Tensor
 import torch.nn as nn
 try:

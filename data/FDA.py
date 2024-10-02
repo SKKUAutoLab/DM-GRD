@@ -7,7 +7,7 @@ def low_freq_mutate_np(amp_src, amp_dest, L=0.1):
     # shift zero-frequency of src and dest to center spectrum
     a_src = np.fft.fftshift(amp_src, axes=(-2, -1))
     a_dest = np.fft.fftshift(amp_dest, axes=(-2, -1))
-    # mix-up in frequency domain
+    # perform mix-up in frequency domain
     _, h, w = a_src.shape
     b = (np.floor(np.amin((h, w)) * L)).astype(int)
     c_h = np.floor(h / 2.0).astype(int)
