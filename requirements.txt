@@ -91,7 +91,7 @@ nbconvert==7.13.1
 nbformat==5.9.2
 nest-asyncio==1.5.8
 ninja==1.11.1.1
-notebook==7.0.6
+notebook==7.2.2
 notebook-shim==0.2.3
 numba==0.59.1
 numpy==1.26.4
