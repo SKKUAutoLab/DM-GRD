@@ -17,7 +17,7 @@ For the BTAD dataset, please download it from this [repository](https://github.c
 
 For the VisA dataset, please download it from this [repository](https://github.com/amazon-science/spot-diff).
 
-For the DTD dataset, please download the it from this [link](https://www.robots.ox.ac.uk/~vgg/data/dtd/).
+For the DTD dataset, please download it from this [link](https://www.robots.ox.ac.uk/~vgg/data/dtd/).
 
 ## 🚀 Experiments
 ### 🌞 Training and testing DM-GRD on the MVTec dataset
