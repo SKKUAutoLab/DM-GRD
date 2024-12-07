@@ -42,10 +42,10 @@ bash scripts/test_visa.sh
 If you find our work useful, please cite the following:
 ```
 @inproceedings{tran2024dual,
-  title={Dual memory networks guided reverse distillation for unsupervised anomaly detection},
-  author={Tran, Chi Dai and Pham, Long Hoang and Tran, Duong Nguyen-Ngoc and Tran and Ho, Quoc Pham-Nam},
-  booktitle={Proceedings of the asian conference on computer vision},
-  pages={x--x},
+  title={Dual Memory Networks Guided Reverse Distillation for Unsupervised Anomaly Detection},
+  author={Tran, Chi Dai and Pham, Long Hoang and Tran, Duong Nguyen-Ngoc and Ho, Quoc Pham-Nam and Jeon, Jae Wook},
+  booktitle={Proceedings of the Asian Conference on Computer Vision},
+  pages={2650--2666},
   year={2024}
 }
 ```
