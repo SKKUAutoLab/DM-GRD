@@ -27,7 +27,7 @@ comm==0.2.0
 debugpy==1.8.0
 decorator==4.4.2
 decord==0.6.0
-deepspeed==0.13.2
+deepspeed==0.15.1
 defusedxml==0.7.1
 docstring-parser==0.16
 einops==0.7.0
