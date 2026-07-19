@@ -107,7 +107,7 @@ pathspec==0.12.1
 pexpect==4.9.0
 pickleshare==0.7.5
 pillow==10.1.0
-pip==24.0
+pip==26.1.2
 platformdirs==3.11.0
 portalocker==2.8.2
 proglog==0.1.10
